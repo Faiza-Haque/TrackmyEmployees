@@ -46,10 +46,43 @@ const init = async () => {
             ]);
             const values = [res.department];
             const newData = await pool.query(`INSERT INTO departments (name) VALUES ($1) RETURNING *`, values);
-            console.log(`${newData} is added`)
+            console.log(`${newData[0].name} is added`)
 
         }
-        else if (option === "add a role") { }
+        else if (option === "add a role") {
+            const { rows } = await pool.query("SELECT d.name FROM departments d");
+            const departments = rows.map(row => row.name);
+            const res = await inquirer.prompt([
+                {
+                    type: "input",
+                    name: "title",
+                    message: "enter the role title",
+                    validate: async (input) => {
+                        return input.length <= 30;
+                    }
+                },
+                {
+                    type: "input",
+                    name: "salary",
+                    message: "Enter the salary",
+                    validate: async (input) => {
+                        return !isNaN(parseFloat(input));
+                    }
+                },
+                {
+                    type: "list",
+                    name: "department",
+                    message: "Choose the department",
+                    choices: departments
+
+                }
+
+            ]);
+            const values = [res.title, parseFloat(res.salary), departments.indexOf(res.department) + 1];
+            const newData = await pool.query(`INSERT INTO roles (title, salary, department_id) VALUES ($1,$2,$3) RETURNING *`, values);
+            // console.log (`${newData[0].title} is added`)
+            console.log(`${res.title} is added`)
+        }
         else if (option === "add an employee") { }
         else if (option === "update an employee role") { }
         else { running = false; }
