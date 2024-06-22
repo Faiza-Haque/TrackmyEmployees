@@ -1,6 +1,6 @@
 drop DATABASE if exists employee_db;
 CREATE DATABASE employee_db;
-\c employee_db
+\c employee_db;
 CREATE TABLE departments (
   id SERIAL PRIMARY KEY,
 name varchar(30) NOT NULL
