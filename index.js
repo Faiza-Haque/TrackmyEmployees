@@ -112,13 +112,37 @@ const init = async () => {
                 choices: managerList,
             }
             ]);
-const roleId = roleList.rows.find(role => role.name === res.role).id; 
-const managerId = managerList.find(manager => manager.name === res.manager).id;
-const values = [res.firstName, res.lastName, roleId, managerId];
-const newData = await pool.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1,$2,$3,$4)RETURNING *`, values);
-console.log(`${res.firstName} ${res.lastName} is added`)
+            const roleId = roleList.rows.find(role => role.name === res.role).id;
+            const managerId = managerList.find(manager => manager.name === res.manager).id;
+            const values = [res.firstName, res.lastName, roleId, managerId];
+            const newData = await pool.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1,$2,$3,$4)RETURNING *`, values);
+            console.log(`${res.firstName} ${res.lastName} is added`)
         }
-        else if (option === "update an employee role") { }
+        else if (option === "update an employee role") {
+            const employeeList = await pool.query("SELECT e.id, CONCAT(e.first_name ,' ', e.last_name) AS name FROM employee e");
+            const roleList = await pool.query("SELECT r.id, r.title AS name FROM roles r");
+            const res = await inquirer.prompt([
+                {
+                    type: "list",
+                    name: "employee",
+                    message: "Choose the employee",
+                    choices: employeeList.rows,
+                },
+                {
+                    type: "list",
+                    name: "role",
+                    message: "Choose the new role",
+                    choices: roleList.rows,
+                },
+
+            ]);
+            const roleId = roleList.rows.find(role => role.name === res.role).id;
+            const employeeId = employeeList.rows.find(employee => employee.name === res.employee).id;
+            const values = [roleId, employeeId];
+            await pool.query(`UPDATE employee SET role_id = $1 WHERE id = $2`, values);
+            console.log(`${res.employee} updated`);
+        }
+
         else { running = false; }
         console.log(option);
     }
