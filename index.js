@@ -242,19 +242,25 @@ const init = async () => {
                 console.log("Role deleted successfully");
             }
         }
+        else if (option === "delete employee") {
 
+            const employeeList = await pool.query("SELECT e.id, CONCAT(e.first_name, ' ',e.last_name) AS name FROM employee e");
+            const res = await inquirer.prompt([
+                {
+                    type: "list",
+                    name: "employee",
+                    message: "choose the employee",
+                    choices: employeeList.rows,
+                }
+            ]);
+            const employeeId = employeeList.rows.find(employee => employee.name === res.employee).id;
+            const values = [employeeId];
+            await pool.query("UPDATE employee SET manager_id = NULL WHERE manager_id = $1", values);
 
+            await pool.query("DELETE FROM employee e WHERE e.id = $1", values);
+            console.log("Employee deleted successfully");
 
-
-
-
-
-
-
-
-
-
-
+        }
         else { running = false; }
         console.log(option);
     }
