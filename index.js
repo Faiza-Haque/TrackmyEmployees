@@ -2,7 +2,7 @@ const inquirer = require("inquirer");
 const { Pool } = require("pg");
 const pool = new Pool({ user: "postgres", password: "faiza", host: "localhost", database: "employee_db" });
 
-const options = ["view all departments", "view all roles", "view all employees", "add a department", "add a role", "add an employee", "update an employee role", "exit"];
+const options = ["view all departments", "view all roles", "view all employees", "add a department", "add a role", "add an employee", "update an employee role", "update employee managers", "exit"];
 
 const menu = async () => {
     const res = await inquirer.prompt([
@@ -142,7 +142,32 @@ const init = async () => {
             await pool.query(`UPDATE employee SET role_id = $1 WHERE id = $2`, values);
             console.log(`${res.employee} updated`);
         }
-
+        else if (option === "update employee managers") {
+            const employeeList = await pool.query("SELECT e.id, CONCAT(e.first_name ,' ', e.last_name) AS name FROM employee e");
+            const managerList = [{ id: null, name: "none" }];
+            const { rows } = await pool.query("SELECT m.id, CONCAT(m.first_name, ' ', m.last_name ) AS name FROM employee m");
+            for (let manager of rows) {
+                managerList.push(manager);
+            }
+            const res = await inquirer.prompt([
+                {
+                    type: "list",
+                    name: "employee",
+                    message: "Choose the employee",
+                    choices: employeeList.rows,
+                }, {
+                    type: "list",
+                    name: "manager",
+                    message: "Choose the new manager",
+                    choices: managerList,
+                }
+            ]);
+            const managerId = managerList.find(manager => manager.name === res.manager).id;
+            const employeeId = employeeList.rows.find(employee => employee.name === res.employee).id;
+            const values = [managerId, employeeId];
+            await pool.query(`UPDATE employee SET manager_id = $1 WHERE id = $2`, values);
+            console.log(`${res.employee} updated`);
+        }
         else { running = false; }
         console.log(option);
     }
