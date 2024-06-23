@@ -2,7 +2,7 @@ const inquirer = require("inquirer");
 const { Pool } = require("pg");
 const pool = new Pool({ user: "postgres", password: "faiza", host: "localhost", database: "employee_db" });
 
-const options = ["view all departments", "view all roles", "view all employees", "view employees by manager", "add a department", "add a role", "add an employee", "update an employee role", "update employee managers", "exit"];
+const options = ["view all departments", "view employees by department", "view all roles", "view all employees", "view employees by manager", "add a department", "add a role", "add an employee", "update an employee role", "update employee managers", "delete department", "delete role", "delete employee", "exit"];
 
 const menu = async () => {
     const res = await inquirer.prompt([
@@ -78,7 +78,8 @@ const init = async () => {
                 }
 
             ]);
-            const departmentId = departmentList.rows.find(department => department.name = res.department).id;
+            const departmentId = departmentList.rows.find(department => department.name === res.department).id;
+            // console.log(`departmentId: ${departmentId}`);
             const values = [res.title, parseFloat(res.salary), departmentId];
             const newData = await pool.query(`INSERT INTO roles (title, salary, department_id) VALUES ($1,$2,$3) RETURNING *`, values);
             // console.log (`${newData[0].title} is added`)
@@ -168,8 +169,8 @@ const init = async () => {
             await pool.query(`UPDATE employee SET manager_id = $1 WHERE id = $2`, values);
             console.log(`${res.employee} updated`);
         }
-        else if (option === "view employees by manager"){
-            const managerList = await pool.query("SELECT m.id, CONCAT(m.first_name, ' ', m.last_name)AS name FROM employee m");
+        else if (option === "view employees by manager") {
+            const managerList = await pool.query("SELECT m.id, CONCAT(m.first_name, ' ', m.last_name) AS name FROM employee m");
             const res = await inquirer.prompt([
                 {
                     type: 'list',
@@ -178,16 +179,86 @@ const init = async () => {
                     choices: managerList.rows,
                 }
             ]);
-        const managerId = managerList.rows.find(manager => manager.name === res.manager);
-        const values = [managerId]
-        const employeeList = await pool.query("SELECT e.id, CONCAT(e.first_name ,' ', e.last_name) AS name FROM employee e WHERE e.manager_id = $1", values);
-        console.table(employeeList.rows) 
+            const managerId = managerList.rows.find(manager => manager.name === res.manager).id;
+            const values = [managerId]
+            const employeeList = await pool.query("SELECT e.id, CONCAT(e.first_name ,' ', e.last_name) AS name FROM employee e WHERE e.manager_id = $1", values);
+            console.table(employeeList.rows)
         }
+        else if (option === "view employees by department") {
+            const departmentList = await pool.query("SELECT d.id, d.name FROM departments d");
+            const res = await inquirer.prompt([
+                {
+                    type: "list",
+                    name: "department",
+                    message: "choose the department",
+                    choices: departmentList.rows,
+
+                }
+            ]);
+            const departmentId = departmentList.rows.find(department => department.name === res.department).id;
+            const values = [departmentId];
+            const employeeList = await pool.query("SELECT e.id, CONCAT(e.first_name, ' ', e.last_name) AS name FROM employee e JOIN roles r ON e.role_id = r.id JOIN departments d ON r.department_id = d.id WHERE d.id = $1", values);
+            console.table(employeeList.rows)
+        }
+        else if (option === "delete department") {
+
+            const departmentList = await pool.query("SELECT d.id, d.name FROM departments d");
+            const res = await inquirer.prompt([
+                {
+                    type: "list",
+                    name: "department",
+                    message: "choose the department",
+                    choices: departmentList.rows,
+                }
+            ]);
+            const departmentId = departmentList.rows.find(department => department.name === res.department).id;
+            const values = [departmentId];
+            const roleList = await pool.query("SELECT * FROM roles r WHERE r.department_id = $1", values);
+            if (roleList.rows.length > 0) {
+                console.log("You cannot delete a department with roles assigned to it. Please delete the roles first");
+            } else {
+                await pool.query("DELETE FROM departments d WHERE d.id = $1", values);
+                console.log("Department deleted successfully");
+            }
+        }
+        else if (option === "delete role") {
+
+            const roleList = await pool.query("SELECT r.id, r.title AS name FROM roles r");
+            const res = await inquirer.prompt([
+                {
+                    type: "list",
+                    name: "role",
+                    message: "choose the role",
+                    choices: roleList.rows,
+                }
+            ]);
+            const roleId = roleList.rows.find(role => role.name === res.role).id;
+            const values = [roleId];
+            const employeeList = await pool.query("SELECT * FROM employee e WHERE e.role_id = $1", values);
+            if (employeeList.rows.length > 0) {
+                console.log("You cannot delete a role with employees assigned to it. Please delete the employee first");
+            } else {
+                await pool.query("DELETE FROM roles r WHERE r.id = $1", values);
+                console.log("Role deleted successfully");
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
 
 
         else { running = false; }
         console.log(option);
     }
 }
+
 
 init();
