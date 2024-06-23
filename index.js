@@ -26,7 +26,7 @@ const init = async () => {
             console.table(rows);
         }
         else if (option === "view all roles") {
-            const { rows } = await pool.query("SELECT roles.title, roles.salary, departments.id AS name FROM roles JOIN departments ON roles.department_id = departments.id");
+            const { rows } = await pool.query("SELECT roles.title, roles.salary, departments.name FROM roles JOIN departments ON roles.department_id = departments.id");
             console.table(rows);
         }
         else if (option === "view all employees") {
@@ -34,6 +34,7 @@ const init = async () => {
             console.table(rows);
         }
         else if (option === "add a department") {
+
             const res = await inquirer.prompt([
                 {
                     type: "input",
@@ -46,12 +47,11 @@ const init = async () => {
             ]);
             const values = [res.department];
             const newData = await pool.query(`INSERT INTO departments (name) VALUES ($1) RETURNING *`, values);
-            console.log(`${newData[0].name} is added`)
+            console.log(`${newData.rows[0].name} is added`)
 
         }
         else if (option === "add a role") {
-            const { rows } = await pool.query("SELECT d.name FROM departments d");
-            const departments = rows.map(row => row.name);
+            const departmentList = await pool.query("SELECT * FROM departments");
             const res = await inquirer.prompt([
                 {
                     type: "input",
@@ -73,17 +73,51 @@ const init = async () => {
                     type: "list",
                     name: "department",
                     message: "Choose the department",
-                    choices: departments
+                    choices: departmentList.rows
 
                 }
 
             ]);
-            const values = [res.title, parseFloat(res.salary), departments.indexOf(res.department) + 1];
+            const departmentId = departmentList.rows.find(department => department.name = res.department).id;
+            const values = [res.title, parseFloat(res.salary), departmentId];
             const newData = await pool.query(`INSERT INTO roles (title, salary, department_id) VALUES ($1,$2,$3) RETURNING *`, values);
             // console.log (`${newData[0].title} is added`)
             console.log(`${res.title} is added`)
         }
-        else if (option === "add an employee") { }
+        else if (option === "add an employee") {
+            const roleList = await pool.query("SELECT r.id, r.title AS name FROM roles r");
+            const managerList = [{ id: null, name: "none" }];
+            const { rows } = await pool.query("SELECT m.id, CONCAT(m.first_name, ' ', m.last_name ) AS name FROM employee m");
+            for (let manager of rows) {
+                managerList.push(manager);
+            }
+            const res = await inquirer.prompt([{
+                type: "input",
+                name: "firstName",
+                message: "what is the first name of the new employee"
+            }, {
+                type: "input",
+                name: "lastName",
+                message: "what is the last name of the new employee"
+
+            }, {
+                type: "list",
+                name: "role",
+                message: "Choose the role",
+                choices: roleList.rows,
+            }, {
+                type: "list",
+                name: "manager",
+                message: "Choose the manager",
+                choices: managerList,
+            }
+            ]);
+const roleId = roleList.rows.find(role => role.name === res.role).id; 
+const managerId = managerList.find(manager => manager.name === res.manager).id;
+const values = [res.firstName, res.lastName, roleId, managerId];
+const newData = await pool.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ($1,$2,$3,$4)RETURNING *`, values);
+console.log(`${res.firstName} ${res.lastName} is added`)
+        }
         else if (option === "update an employee role") { }
         else { running = false; }
         console.log(option);
