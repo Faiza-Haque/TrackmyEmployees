@@ -1,8 +1,9 @@
 const inquirer = require("inquirer");
 const { Pool } = require("pg");
+const { stringify } = require("querystring");
 const pool = new Pool({ user: "postgres", password: "faiza", host: "localhost", database: "employee_db" });
 
-const options = ["view all departments", "view employees by department", "view all roles", "view all employees", "view employees by manager", "add a department", "add a role", "add an employee", "update an employee role", "update employee managers", "delete department", "delete role", "delete employee", "exit"];
+const options = ["view all departments", "view employees by department", "view all roles", "view all employees", "view employees by manager", "add a department", "add a role", "add an employee", "update an employee role", "update employee managers", "delete department", "delete role", "delete employee", "total utilized budget", "exit"];
 
 const menu = async () => {
     const res = await inquirer.prompt([
@@ -261,10 +262,34 @@ const init = async () => {
             console.log("Employee deleted successfully");
 
         }
+        else if (option === "total utilized budget") {
+            const departmentList = await pool.query("SELECT * FROM departments d");
+            const res = await inquirer.prompt([
+
+                {
+                    type: "list",
+                    name: "department",
+                    message: "choose the department",
+                    choices: departmentList.rows,
+                }
+
+            ]);
+            const departmentId = departmentList.rows.find(department => department.name === res.department).id;
+            const values = [departmentId];
+            const employeeList = await pool.query("SELECT e.id, CONCAT(e.first_name, ' ',e.last_name) AS name, r.salary  FROM employee e JOIN roles r ON e.role_id = r.id JOIN departments d ON r.department_id = d.id WHERE d.id = $1", values);
+            // console.log(JSON.stringify(employeeList.rows));
+            const salary = [];
+            employeeList.rows.forEach(employee => {
+                salary.push(parseFloat(employee.salary));
+
+            });
+            const totalBudget = salary.reduce((acc, currentSalary) => acc + currentSalary, 0);
+            console.table(employeeList.rows);
+            console.log(`The total utilized budget for ${res.department} is ${totalBudget}`)
+        }
         else { running = false; }
         console.log(option);
     }
 }
-
 
 init();
