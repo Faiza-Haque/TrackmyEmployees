@@ -2,7 +2,7 @@ const inquirer = require("inquirer");
 const { Pool } = require("pg");
 const pool = new Pool({ user: "postgres", password: "faiza", host: "localhost", database: "employee_db" });
 
-const options = ["view all departments", "view all roles", "view all employees", "add a department", "add a role", "add an employee", "update an employee role", "update employee managers", "exit"];
+const options = ["view all departments", "view all roles", "view all employees", "view employees by manager", "add a department", "add a role", "add an employee", "update an employee role", "update employee managers", "exit"];
 
 const menu = async () => {
     const res = await inquirer.prompt([
@@ -39,7 +39,7 @@ const init = async () => {
                 {
                     type: "input",
                     name: "department",
-                    message: "Enter the department name",
+                    message: "enter the department name",
                     validate: async (input) => {
                         return input.length <= 30;
                     }
@@ -64,7 +64,7 @@ const init = async () => {
                 {
                     type: "input",
                     name: "salary",
-                    message: "Enter the salary",
+                    message: "enter the salary",
                     validate: async (input) => {
                         return !isNaN(parseFloat(input));
                     }
@@ -72,7 +72,7 @@ const init = async () => {
                 {
                     type: "list",
                     name: "department",
-                    message: "Choose the department",
+                    message: "choose the department",
                     choices: departmentList.rows
 
                 }
@@ -103,12 +103,12 @@ const init = async () => {
             }, {
                 type: "list",
                 name: "role",
-                message: "Choose the role",
+                message: "choose the role",
                 choices: roleList.rows,
             }, {
                 type: "list",
                 name: "manager",
-                message: "Choose the manager",
+                message: "choose the manager",
                 choices: managerList,
             }
             ]);
@@ -125,13 +125,13 @@ const init = async () => {
                 {
                     type: "list",
                     name: "employee",
-                    message: "Choose the employee",
+                    message: "choose the employee",
                     choices: employeeList.rows,
                 },
                 {
                     type: "list",
                     name: "role",
-                    message: "Choose the new role",
+                    message: "choose the new role",
                     choices: roleList.rows,
                 },
 
@@ -153,12 +153,12 @@ const init = async () => {
                 {
                     type: "list",
                     name: "employee",
-                    message: "Choose the employee",
+                    message: "choose the employee",
                     choices: employeeList.rows,
                 }, {
                     type: "list",
                     name: "manager",
-                    message: "Choose the new manager",
+                    message: "choose the new manager",
                     choices: managerList,
                 }
             ]);
@@ -168,8 +168,26 @@ const init = async () => {
             await pool.query(`UPDATE employee SET manager_id = $1 WHERE id = $2`, values);
             console.log(`${res.employee} updated`);
         }
+        else if (option === "view employees by manager"){
+            const managerList = await pool.query("SELECT m.id, CONCAT(m.first_name, ' ', m.last_name)AS name FROM employee m");
+            const res = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'manager',
+                    message: 'choose the manager',
+                    choices: managerList.rows,
+                }
+            ]);
+        const managerId = managerList.rows.find(manager => manager.name === res.manager);
+        const values = [managerId]
+        const employeeList = await pool.query("SELECT e.id, CONCAT(e.first_name ,' ', e.last_name) AS name FROM employee e WHERE e.manager_id = $1", values);
+        console.table(employeeList.rows) 
+        }
+
+
         else { running = false; }
         console.log(option);
     }
 }
+
 init();
