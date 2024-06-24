@@ -1,8 +1,6 @@
 const inquirer = require("inquirer");
 const { Pool } = require("pg");
-const { stringify } = require("querystring");
-const pool = new Pool({ user: "postgres", password: "faiza", host: "localhost", database: "employee_db" });
-
+let pool = null
 const options = ["view all departments", "view employees by department", "view all roles", "view all employees", "view employees by manager", "add a department", "add a role", "add an employee", "update an employee role", "update employee managers", "delete department", "delete role", "delete employee", "total utilized budget", "exit"];
 
 const menu = async () => {
@@ -17,9 +15,43 @@ const menu = async () => {
     ]);
     return res.option;
 }
+const psqlAccount = async () => {
+    const res = await inquirer.prompt([
+        {
+            type: "input",
+            name: "username",
+            message: "Enter your PostgreSQL username"
 
+        },
+        {
+            type: "password",
+            name: "password",
+            message: "Enter your PostgreSQL password"
+        }
+    ]);
+    pool = new Pool(
+        {
+            user: `${res.username}`,
+            password: `${res.password}`,
+            host: "localhost",
+            database: "employee_db"
+
+        });
+    try {
+        await pool.connect();
+        console.log("Connected to PostgreSQL database");
+        return true;
+
+    }
+    catch (err) {
+        console.log("Failed to connect to PostgresSQL database");
+        return false;
+
+    }
+
+}
 const init = async () => {
-    let running = true;
+    let running = await psqlAccount();
     while (running) {
         const option = await menu();
         if (option === "view all departments") {
