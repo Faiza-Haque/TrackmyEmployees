@@ -1,70 +1,106 @@
-const inquirer = require("inquirer");
-const { Pool } = require("pg");
-let pool = null
-const options = ["view all departments", "view employees by department", "view all roles", "view all employees", "view employees by manager", "add a department", "add a role", "add an employee", "update an employee role", "update employee managers", "delete department", "delete role", "delete employee", "total utilized budget", "exit"];
+const inquirer = require("inquirer"); // Import the 'inquirer' module for creating interactive command-line prompts
+const { Pool } = require("pg");// Import the 'Pool' class from the 'pg' (PostgreSQL) module for connecting to a PostgreSQL database
+let pool = null // Initialize the 'pool' variable to null; this will hold the database connection pool
 
+// Define the list of options for the inquirer prompt
+const options = ["view all departments", // Option to view all departments
+    "view employees by department", // Option to view employees by their department
+    "view all roles", // Option to view all roles
+    "view all employees", // Option to view all employees
+    "view employees by manager", // Option to view employees by their manager
+    "add a department", // Option to add a new department
+    "add a role", // Option to add a new role
+    "add an employee", // Option to add a new employee
+    "update an employee role", // Option to update an employee's role
+    "update employee managers", // Option to update an employee's manager
+    "delete department", // Option to delete a department
+    "delete role", // Option to delete a role
+    "delete employee", // Option to delete an employee
+    "total utilized budget", // Option to view the total utilized budget
+    "exit"];// Option to exit the application
+
+// Define an asynchronous function named 'menu' to display a menu and capture user input
 const menu = async () => {
+    // Use inquirer to prompt the user with a list of options
     const res = await inquirer.prompt([
         {
-            type: "list",
-            name: "option",
-            message: "What would you like to do?",
-            choices: options
+            type: "list", // Specify the type of prompt as a list
+            name: "option", // Name the prompt 'option', which will be used to access the user's selection
+            message: "What would you like to do?", // Message to display to the user
+            choices: options // Provide the list of choices defined earlier
 
         }
     ]);
-    return res.option;
+    return res.option; // Return the user's selected option
 }
+
+// Define an asynchronous function named 'psqlAccount' to prompt the user for PostgreSQL account credentials
 const psqlAccount = async () => {
+    // Use inquirer to prompt the user with input fields for PostgreSQL username and password
     const res = await inquirer.prompt([
         {
-            type: "input",
-            name: "username",
-            message: "Enter your PostgreSQL username"
+            type: "input", // Specify the type of prompt as a text input
+            name: "username", // Name the prompt 'username', which will be used to access the user's input
+            message: "Enter your PostgreSQL username" // Message to display to the user for the username prompt
 
         },
         {
-            type: "password",
-            name: "password",
-            message: "Enter your PostgreSQL password"
+            type: "password", // Specify the type of prompt as a password input to mask the input
+            name: "password", // Name the prompt 'password', which will be used to access the user's input
+            message: "Enter your PostgreSQL password" // Message to display to the user for the password prompt
         }
+        // The function currently does not have a return or further processing,
+    // it captures the input in the 'res' object which can be used for further actions.
     ]);
+
+    // Initialize a new instance of the Pool class from the 'pg' module for connecting to a PostgreSQL database
     pool = new Pool(
         {
-            user: `${res.username}`,
-            password: `${res.password}`,
-            host: "localhost",
-            database: "employee_db"
+            user: `${res.username}`, // Use the username provided by the user from the inquirer prompt
+            password: `${res.password}`, // Use the password provided by the user from the inquirer prompt
+            host: "localhost", // Specify the database host, in this case, localhost
+            database: "employee_db" // Specify the database name to connect to, in this case, 'employee_db'
 
         });
+
+        // Try to connect to the PostgreSQL database using the connection pool
     try {
-        await pool.connect();
-        console.log("Connected to PostgreSQL database");
-        return true;
+        await pool.connect(); // Attempt to establish a connection to the database
+        console.log("Connected to PostgreSQL database"); // Log a success message if the connection is established
+        return true; // Return true to indicate a successful connection
 
     }
+    // Catch block to handle errors that occur during the connection attempt
     catch (err) {
-        console.log("Failed to connect to PostgresSQL database");
-        return false;
+        console.log("Failed to connect to PostgresSQL database"); // Log an error message if the connection fails
+        return false; // Return false to indicate a failed connection
 
     }
 
 }
+// Define an asynchronous function named 'init' to initialize the application
 const init = async () => {
+    // Prompt the user for PostgreSQL account credentials and attempt to connect
     let running = await psqlAccount();
+    // Enter a loop that continues while 'running' is true
     while (running) {
+         // Display the menu and capture the user's selected option
         const option = await menu();
+        // Handle the user's selected option
         if (option === "view all departments") {
+             // Query to retrieve all department names from the database
             const { rows } = await pool.query("SELECT departments.name FROM departments");
-            console.table(rows);
+            console.table(rows); // Display the result as a table
         }
         else if (option === "view all roles") {
+            // Query to retrieve all roles with their titles, salaries, and corresponding department names
             const { rows } = await pool.query("SELECT roles.title, roles.salary, departments.name FROM roles JOIN departments ON roles.department_id = departments.id");
-            console.table(rows);
+            console.table(rows); // Display the result as a table
         }
         else if (option === "view all employees") {
+            // Query to retrieve all employees with their details including role, salary, department, and manager (if any)
             const { rows } = await pool.query("SELECT e.first_name, e.last_name, r.title, r.salary, d.name AS department, COALESCE(m.first_name || ' ' || m.last_name, 'NULL') AS manager FROM employee e JOIN roles r ON e.role_id = r.id JOIN departments d ON r.department_id = d.id LEFT JOIN employee m ON e.manager_id = m.id");
-            console.table(rows);
+            console.table(rows); // Display the result as a table
         }
         else if (option === "add a department") {
 
