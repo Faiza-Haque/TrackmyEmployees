@@ -112,10 +112,16 @@ const init = async () => {
                     name: "department", // Name the prompt 'department', which will be used to access the user's input
                     message: "enter the department name", // Message to display to the user for the department name prompt
                     validate: async (input) => { // Validation function to ensure the input meets certain criteria
-                        return input.length <= 30;  // Validate that the input length is 30 characters or less
+                        if (input.trim().length > 30) {
+                           console.log("Department name should not exceed 30 characters");
+                            return false;
+                            // Validate that the input length is 30 characters or less
+                        }
+                        return true;
                     }
                 }
             ]);
+
             // Store the user's input (department name) in an array to be used as values in the query
             const values = [res.department];
             // Execute an SQL query to insert the new department name into the 'departments' table
@@ -137,7 +143,12 @@ const init = async () => {
                     name: "title", // Name the prompt 'title', which will be used to access the user's input
                     message: "enter the role title", // Message to display to the user for the role title prompt
                     validate: async (input) => { // Validation function to ensure the input meets certain criteria
-                        return input.length <= 30; // Validate that the input length is 30 characters or less
+                        if (input.trim().length > 30) {
+                            console.log ("Role title should not exceed 30 characters")
+                            return false;
+                            // Validate that the input length is 30 characters or less
+                        }
+                        return true; // Validate that the input length is 30 characters or less
                     }
                 },
                 {
@@ -145,7 +156,11 @@ const init = async () => {
                     name: "salary", // Name the prompt 'salary', which will be used to access the user's input
                     message: "enter the salary", // Message to display to the user for the salary prompt
                     validate: async (input) => { // Validation function to ensure the input meets certain criteria
-                        return !isNaN(parseFloat(input)); // Validate that the input is a number
+                        if (isNaN(parseFloat(input)) || input < 0) {
+                            console.log(`Invalid salary`)
+                            return false;
+                        }
+                        return true;
                     }
                 },
                 {
@@ -183,12 +198,27 @@ const init = async () => {
             const res = await inquirer.prompt([{
                 type: "input", // Specify the type of prompt as a text input
                 name: "firstName", // Name the prompt 'firstName', which will be used to access the user's input
-                message: "what is the first name of the new employee" // Message to display to the user for the first name prompt
+                message: "what is the first name of the new employee", // Message to display to the user for the first name prompt
+                validate: async (input) => {
+                    if (input.trim().length > 30) {
+                        console.log("Employee First Name should not exceed 30 characters")
+                        return false;
+                        // Validate that the input length is 30 characters or less
+                    }
+                    return true;
+                }
             }, {
                 type: "input", // Specify the type of prompt as a text input
                 name: "lastName", // Name the prompt 'lastName', which will be used to access the user's input
-                message: "what is the last name of the new employee" // Message to display to the user for the last name prompt
-
+                message: "what is the last name of the new employee", // Message to display to the user for the last name prompt
+                validate: async (input) => {
+                    if (input.trim().length > 30) {
+                        console.log("Employee Last Name should not exceed 30 characters")
+                        return false;
+                        // Validate that the input length is 30 characters or less
+                    }
+                    return true;
+                }
             }, {
                 type: "list", // Specify the type of prompt as a list selection
                 name: "role", // Name the prompt 'role', which will be used to access the user's selection
@@ -444,16 +474,16 @@ const init = async () => {
             const employeeList = await pool.query("SELECT e.id, CONCAT(e.first_name, ' ',e.last_name) AS name, r.salary  FROM employee e JOIN roles r ON e.role_id = r.id JOIN departments d ON r.department_id = d.id WHERE d.id = $1", values);
             // console.log(JSON.stringify(employeeList.rows));
 
-             // Initialize an array to store the salaries of the employees
+            // Initialize an array to store the salaries of the employees
             const salary = [];
-             // Iterate over the list of employees and add their salaries to the array
+            // Iterate over the list of employees and add their salaries to the array
             employeeList.rows.forEach(employee => {
                 salary.push(parseFloat(employee.salary));
 
             });
             // Calculate the total utilized budget by summing up the salaries
             const totalBudget = salary.reduce((acc, currentSalary) => acc + currentSalary, 0);
-             // Display the list of employees and their details in a table format
+            // Display the list of employees and their details in a table format
             console.table(employeeList.rows);
             // Display the total utilized budget for the selected department
             console.log(`The total utilized budget for ${res.department} is ${totalBudget}`)
@@ -463,6 +493,7 @@ const init = async () => {
         // Log the selected option to the console
         console.log(option);
     }
+    process.exit();
 }
 // Initialize the application
 init();
