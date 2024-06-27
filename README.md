@@ -71,26 +71,27 @@ To use this application, run the following command in the terminal:
 * npm start
 
 
--The application will prompt you to select an option from the menu. Select an option and follow the
--Prompts to perform the desired action.
--Follow the prompts to interact with the application.
+* The application will prompt you to select an option from the menu. Select an option and follow the
+* Prompts to perform the desired action.
+* Follow the prompts to interact with the application.
 
 These are list of option you will be presented with:
-Add Department: You will be prompted to enter the name of the new department.
-Add Employee: You will be prompted to enter the details of the new employee, including their first name, last name, role, and manager.
-Add Role: You will be prompted to enter the title, salary, and department of the new role.
-Delete Department: You will be prompted to select a department to delete.
-Delete Employee: You will be prompted to select an employee to delete.
-Delete Role: You will be prompted to select a role to delete.
-Update Employee Manager: You will be prompted to select an employee and their new manager.
-Update Employee Role: You will be prompted to select an employee and their new role.
-View All Departments: The list of all departments will be displayed.
-View All Employees: The list of all employees along with their roles, salaries, and managers will be displayed.
-View All Roles: The list of all roles along with their departments and salaries will be displayed.
-View Employees by Department: You will be prompted to select a department, and the employees in that department will be displayed.
-View Employees by Manager: You will be prompted to select a manager, and the employees managed by that manager will be displayed.
-View the Total Utilized Budget of a Department: You will be prompted to select a department, and the total salary budget of that department will be displayed.
-Exit: Exiting the application.
+
+* Add Department: You will be prompted to enter the name of the new department.
+* Add Employee: You will be prompted to enter the details of the new employee, including their first name, last name, role, and manager.
+* Add Role: You will be prompted to enter the title, salary, and department of the new role.
+* Delete Department: You will be prompted to select a department to delete.
+* Delete Employee: You will be prompted to select an employee to delete.
+* Delete Role: You will be prompted to select a role to delete.
+* Update Employee Manager: You will be prompted to select an employee and their new manager.
+* Update Employee Role: You will be prompted to select an employee and their new role.
+* View All Departments: The list of all departments will be displayed.
+* View All Employees: The list of all employees along with their roles, salaries, and managers will be displayed.
+* View All Roles: The list of all roles along with their departments and salaries will be displayed.
+* View Employees by Department: You will be prompted to select a department, and the employees in that department will be displayed.
+* View Employees by Manager: You will be prompted to select a manager, and the employees managed by that manager will be displayed.
+* View the Total Utilized Budget of a Department: You will be prompted to select a department, and the total salary budget of that department will be displayed.
+* Exit: Exiting the application.
 
 
 ## Structure
