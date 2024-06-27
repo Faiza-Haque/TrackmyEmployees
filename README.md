@@ -50,16 +50,16 @@ To install this application, follow the steps below:
 * PostgreSQL
 * Inquirer.js
 
-Clone the repository:
+1. Clone the repository:
 
 git clone: git@github.com:Faiza-Haque/TrackmyEmployees.git
 cd employee-management-system
 Install dependencies:
 
-npm install
+2. npm install
 Set up PostgreSQL database:
 
-Run the following command to set up PostgresSQL database
+3. Run the following command to set up PostgresSQL database
 
 psql -U [your-user-name] (for me: postgres)
 \i db/schema.sql
