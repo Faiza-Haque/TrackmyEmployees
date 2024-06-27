@@ -8,7 +8,7 @@ TrackmyEmployees is a simple web application to track employees in my company. T
 - [Usage](#usage)
 - [Structure](#structure)
 - [Exceptions](#exceptions)
-- [Links] (#links)
+- [Links](#links)
 - [Acknowledgements](#acknowledgements)
 - [Contact](#contact)
 
